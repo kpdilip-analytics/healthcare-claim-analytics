@@ -1,0 +1,143 @@
+================================================================================
+PROJECT REQUIREMENTS SPECIFICATION
+ClaimFlow Analytics – Healthcare Revenue Cycle Dashboard
+================================================================================
+
+1. PROJECT OVERVIEW
+--------------------------------------------------
+Project Name: ClaimFlow Analytics
+Domain: Healthcare Revenue Cycle Management
+Client Persona: SettleMed (Noida-based healthcare billing startup)
+Owner: Pushpal Kawara
+Portfolio: Under development
+
+Objective: Provide a centralized analytics dashboard to monitor,
+investigate, and recover denied insurance claims, reducing revenue
+leakage and improving billing efficiency.
+
+2. BUSINESS CONTEXT & PROBLEM STATEMENT
+--------------------------------------------------
+- US hospitals lose billions annually due to claim denials and underpayments.
+- Billing teams lack real-time visibility into:
+  * Which payers deny claims and why
+  * Amount of cash stuck in pending/denied status
+  * Hospital-wise denial performance
+  * Financial impact of denials and recovery potential
+- SettleMed required a single source of truth to:
+  * Track denial patterns
+  * Prioritize high-value recoveries
+  * Guide process improvements
+
+3. DATA REQUIREMENTS
+--------------------------------------------------
+- Data Source: Synthetically generated using Python (Pandas, Faker)
+- Time Period: Jan 2024 – Dec 2025
+- Volume: ~50,000 claims
+- Entities:
+  * Hospitals: 25+ facilities across US states
+  * Payers: 12 insurance providers (commercial & government)
+- Fact Table: fact_claims
+  Columns: Claim_ID, Hospital_ID, Payer_ID, Date_ID,
+  Claim_Amount, Paid_Amount, Denial_Reason, Claim_Status,
+  Days_Pending, Appeal_Flag, Recovery_Amount, etc.
+- Dimension Tables:
+  * dim_hospitals (Name, State, Bed_Size, Type)
+  * dim_payers (Payer_Name, Category)
+  * dim_date (Date, Month, Quarter, Year, Fiscal attributes)
+- Data Generation Logic:
+  * Realistic denial rates (15-18% for commercial payers)
+  * Common denial reasons (missing documentation, medical necessity, coding errors)
+  * Aging distribution replicating real revenue cycles
+  * Appeal success rates around 50%
+  * Hospital performance variation
+
+4. DATA MODELING (STAR SCHEMA)
+--------------------------------------------------
+- Fact table: fact_claims at center
+- Dimensions: dim_hospitals, dim_payers, dim_date
+- 1-to-many relationships
+- Custom DAX date table for time intelligence
+- Optimized for fast cross-filtering and drill-through
+
+5. DASHBOARD FUNCTIONAL REQUIREMENTS
+--------------------------------------------------
+Page 1 - Executive Summary:
+  - 6 KPI cards: Total Claims, Denial Rate, Recovery %,
+    Revenue Gap, Pending Amount, Appeals Success
+  - Monthly claim volume trend
+  - Claim status donut chart
+  - Top 5 payers by denial volume
+  - Pending claims aging buckets
+
+Page 2 - Payer Analysis:
+  - Denial rate bar chart by payer
+  - Revenue gap (claimed vs paid) columns
+  - Denial reasons treemap
+  - Appeal scatter plot (denial rate vs recovery %)
+
+Page 3 - Hospital Scorecard:
+  - Filled map of hospital locations
+  - Hospital comparison table (claims, denial rate, avg. pending days)
+  - Scatter chart: claim volume vs denial rate
+
+Page 4 - Denial Deep Dive & Financial Impact:
+  - Waterfall chart showing revenue impact (expected vs actual)
+  - Recovery funnel (denied → appealed → recovered)
+  - Aging heatmap by payer and age bucket
+  - Top 10 denied claims by amount
+
+6. KEY DAX MEASURES (20+)
+--------------------------------------------------
+Total Claims = COUNTROWS(fact_claims)
+Denied Claims = CALCULATE([Total Claims], Claim_Status = "Denied")
+Denial Rate = DIVIDE([Denied Claims], [Total Claims])
+Revenue Gap = SUMX(fact_claims, Claim_Amount - Paid_Amount)
+Pending Amount = CALCULATE(SUM(fact_claims[Claim_Amount]), Claim_Status = "Pending")
+Recovery % = DIVIDE(SUM(fact_claims[Recovery_Amount]), SUM(fact_claims[Claim_Amount]))
+Appeal Success Rate = DIVIDE([Recovered Denied], [Appealed Denied])
+MoM Growth = (Current Month - Previous Month)/Previous Month
+Data Quality Flag = COUNTROWS(fact_claims) where denial reason is blank
+Avg. Pending Days = AVERAGE(fact_claims[Days_Pending])
+
+7. DATA CLEANING (POWER QUERY)
+--------------------------------------------------
+Six automated steps:
+1. Remove duplicate claim IDs
+2. Standardize payer names (mixed casing)
+3. Fill missing denial reasons with "Not Specified"
+4. Correct negative claim amounts
+5. Convert date columns to proper date type
+6. Create derived columns (Claim_Status_Group, Age_Bucket)
+
+8. TOOLS & TECHNOLOGIES
+--------------------------------------------------
+- Python 3.9+ : Data generation (Pandas, NumPy, Faker)
+- Microsoft Excel : Initial profiling
+- Power BI Desktop : ETL, modeling, DAX, visualization
+- Power Query : Data cleaning and transformation
+- DAX : Measures and time intelligence
+- Git & GitHub : Version control and portfolio
+- PowerPoint : Stakeholder presentation
+- Portfolio website : Upcoming deployment
+
+9. DEPLOYMENT & DELIVERABLES
+--------------------------------------------------
+- Power BI dashboard prepared for interactive embed on portfolio
+- PDF presentation summarizing problem, approach, and insights
+- Sample CSV dataset for replication
+- README with full narrative
+- Star schema diagram
+
+10. LIMITATIONS & FUTURE SCOPE
+--------------------------------------------------
+- Data is synthetic and based on typical US healthcare patterns
+- Real-world regulatory nuances (HIPAA) not applied
+- Future enhancements:
+  * Real-time claim feed integration
+  * Predictive denial risk scoring using ML
+  * Automated appeal letter generation
+  * Integration with practice management systems
+
+================================================================================
+END OF REQUIREMENTS
+================================================================================
